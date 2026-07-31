@@ -41,8 +41,16 @@ class GoogleHealthAuthError(GoogleHealthError):
     """Authorization is invalid or revoked."""
 
 
+class GoogleHealthAccountNotLinkedError(GoogleHealthError):
+    """The Google account is not linked to a Fitbit account."""
+
+
 class GoogleHealthPermissionError(GoogleHealthError):
     """A required scope was not granted."""
+
+    def __init__(self, message: str, reason: str | None = None) -> None:
+        super().__init__(message)
+        self.reason = reason
 
 
 class GoogleHealthRateLimitError(GoogleHealthError):
@@ -263,8 +271,10 @@ class GoogleHealthApiClient:
                 if response.status == 401:
                     raise GoogleHealthAuthError("Google authorization is invalid")
                 if response.status == 403:
+                    reason = await _google_error_reason(response)
                     raise GoogleHealthPermissionError(
-                        "Google Health permission or required scope is missing"
+                        "Google Health permission or required scope is missing",
+                        reason,
                     )
                 if response.status == 429:
                     if attempt < 2:
@@ -281,8 +291,14 @@ class GoogleHealthApiClient:
                         f"Google Health server error ({response.status})"
                     )
                 if response.status >= 400:
+                    reason = await _google_error_reason(response)
+                    if reason == "ACCOUNT_NOT_LINKED":
+                        raise GoogleHealthAccountNotLinkedError(
+                            "Google account is not linked to Fitbit"
+                        )
                     raise GoogleHealthResponseError(
-                        f"Google Health request failed ({response.status})"
+                        f"Google Health request failed ({response.status}, "
+                        f"reason={reason or 'unknown'})"
                     )
                 try:
                     payload = await response.json()
@@ -315,6 +331,29 @@ class GoogleHealthApiClient:
                 if response is not None:
                     response.release()
         raise GoogleHealthTemporaryError("Unable to reach Google Health")
+
+
+async def _google_error_reason(response: ClientResponse) -> str | None:
+    """Extract a documented Google ErrorInfo reason without retaining its message."""
+    try:
+        payload = await response.json()
+    except ValueError, TypeError:
+        return None
+    if not isinstance(payload, dict):
+        return None
+    error = payload.get("error")
+    if not isinstance(error, dict):
+        return None
+    details = error.get("details")
+    if not isinstance(details, list):
+        return None
+    for detail in details:
+        if not isinstance(detail, dict):
+            continue
+        reason = detail.get("reason")
+        if isinstance(reason, str) and reason:
+            return reason
+    return None
 
 
 def iter_date_chunks(

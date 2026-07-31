@@ -10,8 +10,10 @@ import pytest
 
 from custom_components.google_health.api import (
     METRIC_CALORIES,
+    GoogleHealthAccountNotLinkedError,
     GoogleHealthApiClient,
     GoogleHealthAuthError,
+    GoogleHealthPermissionError,
     GoogleHealthRateLimitError,
     GoogleHealthTemporaryError,
     iter_date_chunks,
@@ -211,6 +213,49 @@ async def test_api_401() -> None:
     )
     with pytest.raises(GoogleHealthAuthError):
         await client.async_get_identity()
+
+
+@pytest.mark.asyncio
+async def test_api_reports_account_not_linked() -> None:
+    client = GoogleHealthApiClient(
+        FakeRequester(
+            FakeResponse(
+                400,
+                {
+                    "error": {
+                        "details": [
+                            {"reason": "ACCOUNT_NOT_LINKED"},
+                        ]
+                    }
+                },
+            )
+        ),
+        ZoneInfo("UTC"),
+    )
+    with pytest.raises(GoogleHealthAccountNotLinkedError):
+        await client.async_get_identity()
+
+
+@pytest.mark.asyncio
+async def test_api_preserves_permission_reason() -> None:
+    client = GoogleHealthApiClient(
+        FakeRequester(
+            FakeResponse(
+                403,
+                {
+                    "error": {
+                        "details": [
+                            {"reason": "MISSING_OAUTH_SCOPE"},
+                        ]
+                    }
+                },
+            )
+        ),
+        ZoneInfo("UTC"),
+    )
+    with pytest.raises(GoogleHealthPermissionError) as error:
+        await client.async_get_identity()
+    assert error.value.reason == "MISSING_OAUTH_SCOPE"
 
 
 @pytest.mark.asyncio
