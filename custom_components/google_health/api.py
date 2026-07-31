@@ -167,8 +167,8 @@ class GoogleHealthApiClient:
         self, start_date: date, end_exclusive: date
     ) -> MetricValues:
         filter_value = (
-            f'dailyRestingHeartRate.date >= "{start_date.isoformat()}" AND '
-            f'dailyRestingHeartRate.date < "{end_exclusive.isoformat()}"'
+            f'daily_resting_heart_rate.date >= "{start_date.isoformat()}" AND '
+            f'daily_resting_heart_rate.date < "{end_exclusive.isoformat()}"'
         )
         points = await self._async_list_data_points(DATA_TYPE_RHR, filter_value)
         result: MetricValues = {}
@@ -185,13 +185,18 @@ class GoogleHealthApiClient:
     async def _async_fetch_daily_rollup(
         self, data_type: str, start_date: date, end_exclusive: date
     ) -> MetricValues:
+        range_days = (end_exclusive - start_date).days
+        if range_days < 1:
+            return {}
         request_body: dict[str, Any] = {
             "range": {
                 "start": {"date": google_date(start_date)},
                 "end": {"date": google_date(end_exclusive)},
             },
             "windowSizeDays": 1,
-            "pageSize": 10000,
+            # Google validates windowSizeDays * pageSize against the data type's
+            # maximum query duration, even when the requested range is shorter.
+            "pageSize": range_days,
         }
         result: MetricValues = {}
         page_token: str | None = None
