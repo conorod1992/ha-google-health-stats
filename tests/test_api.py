@@ -166,6 +166,18 @@ async def test_rollup_parsing_and_request_shape() -> None:
     assert method == "POST"
     assert url.endswith("/total-calories/dataPoints:dailyRollUp")
     assert kwargs["json"]["windowSizeDays"] == 1
+    assert kwargs["json"]["pageSize"] == 1
+
+
+@pytest.mark.asyncio
+async def test_rollup_page_size_matches_requested_range() -> None:
+    """Rollup page size stays within Google's duration-product constraint."""
+    requester = FakeRequester(FakeResponse(200, {"rollupDataPoints": []}))
+    client = GoogleHealthApiClient(requester, ZoneInfo("UTC"))
+    await client._async_fetch_daily_rollup(
+        "total-calories", date(2026, 7, 1), date(2026, 7, 15)
+    )
+    assert requester.calls[0][2]["json"]["pageSize"] == 14
 
 
 @pytest.mark.asyncio
@@ -203,6 +215,10 @@ async def test_pagination() -> None:
     client = GoogleHealthApiClient(requester, ZoneInfo("UTC"))
     values = await client._async_fetch_rhr(date(2026, 7, 29), date(2026, 7, 31))
     assert values == {date(2026, 7, 29): 61, date(2026, 7, 30): 62}
+    assert requester.calls[0][2]["params"]["filter"] == (
+        'daily_resting_heart_rate.date >= "2026-07-29" AND '
+        'daily_resting_heart_rate.date < "2026-07-31"'
+    )
     assert requester.calls[1][2]["params"]["pageToken"] == "next"
 
 
