@@ -13,8 +13,12 @@
     },
     "abort": {
       "already_configured": "This Google Health account is already configured.",
+      "account_not_linked": "This Google account is not linked to a Fitbit account. Link or migrate the account in Fitbit, then try again.",
+      "access_not_available": "Google Health API access is not available for this account or project.",
       "cannot_connect": "Unable to connect to Google Health. Try again later.",
+      "data_access_denied": "Google denied access to this account's health data. Confirm the Google Health API is enabled and the account is an allowed test user.",
       "invalid_auth": "Google rejected the authorization.",
+      "missing_permissions": "Google did not grant the required Google Health permissions. Add all three read-only scopes in Google Cloud and authorize again.",
       "wrong_account": "You signed in with a different Google Health account.",
       "reauth_successful": "Google Health was reconnected successfully."
     }
