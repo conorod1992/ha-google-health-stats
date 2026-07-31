@@ -50,6 +50,13 @@ async def test_oauth_success_creates_identity_based_entry() -> None:
     assert result["type"] == "create_entry"
 
 
+def test_oauth_does_not_combine_previously_granted_scopes() -> None:
+    flow = GoogleHealthConfigFlow()
+    authorize_data = flow.extra_authorize_data
+    assert "include_granted_scopes" not in authorize_data
+    assert "googlehealth.activity_and_fitness.readonly" in authorize_data["scope"]
+
+
 @pytest.mark.asyncio
 async def test_reauthentication_updates_existing_entry() -> None:
     flow = GoogleHealthConfigFlow()
@@ -94,6 +101,10 @@ async def test_reauth_confirmation() -> None:
         (
             GoogleHealthPermissionError("missing", "MISSING_OAUTH_SCOPE"),
             "missing_permissions",
+        ),
+        (
+            GoogleHealthPermissionError("combined", "DISALLOWED_OAUTH_SCOPES"),
+            "disallowed_permissions",
         ),
         (
             GoogleHealthPermissionError(
