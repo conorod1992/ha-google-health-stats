@@ -7,6 +7,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from homeassistant.config_entries import SOURCE_REAUTH
 
+from custom_components.google_health.api import (
+    GoogleHealthAccountNotLinkedError,
+    GoogleHealthPermissionError,
+)
 from custom_components.google_health.config_flow import GoogleHealthConfigFlow
 
 TOKEN_DATA = {
@@ -81,3 +85,41 @@ async def test_reauth_confirmation() -> None:
     result = await flow.async_step_reauth_confirm()
     assert result["type"] == "form"
     assert result["step_id"] == "reauth_confirm"
+
+
+@pytest.mark.parametrize(
+    ("error", "reason"),
+    [
+        (GoogleHealthAccountNotLinkedError(), "account_not_linked"),
+        (
+            GoogleHealthPermissionError("missing", "MISSING_OAUTH_SCOPE"),
+            "missing_permissions",
+        ),
+        (
+            GoogleHealthPermissionError(
+                "unavailable", "API_PRIVATE_PREVIEW_ACCESS_DENIED"
+            ),
+            "access_not_available",
+        ),
+        (
+            GoogleHealthPermissionError("denied", "DATA_ACCESS_DENIED"),
+            "data_access_denied",
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_oauth_reports_actionable_google_error(
+    error: Exception, reason: str
+) -> None:
+    flow = GoogleHealthConfigFlow()
+    flow.hass = MagicMock()
+    flow.hass.config.time_zone = "UTC"
+    flow.context = {"source": "user"}
+    flow.flow_impl = MagicMock(domain="google_health")
+    with patch(
+        "custom_components.google_health.config_flow.GoogleHealthApiClient.async_get_identity",
+        AsyncMock(side_effect=error),
+    ):
+        result = await flow.async_oauth_create_entry(TOKEN_DATA)
+    assert result["type"] == "abort"
+    assert result["reason"] == reason

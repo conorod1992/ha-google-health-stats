@@ -103,6 +103,8 @@ The internal normalized model can add these values later without changing the st
 ## Troubleshooting
 
 - **Authorization stops after sign-in:** verify the account is listed under **Test users**, the three scopes are configured under **Data Access**, and the OAuth client is a Web application.
+- **Account not linked:** the Google account used for OAuth must be the account linked to Fitbit; migrate a legacy Fitbit login to Google first if needed.
+- **Google denies health-data access:** confirm the Google Health API is enabled in the same Cloud project as the OAuth client and remove the integration before authorizing again after changing scopes.
 - **`redirect_uri_mismatch`:** copy Home Assistant's redirect URI exactly into the client's authorized redirect URIs.
 - **Reconnect required every seven days:** the OAuth consent screen is in Testing mode; this is Google's expected refresh-token behavior.
 - **A sensor has no value:** the source may not provide that metric/day, the tracker may not have synced, or the required permission was not granted. Missing data is intentionally not converted to zero.

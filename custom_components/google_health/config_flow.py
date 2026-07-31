@@ -15,9 +15,11 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import (
+    GoogleHealthAccountNotLinkedError,
     GoogleHealthApiClient,
     GoogleHealthAuthError,
     GoogleHealthError,
+    GoogleHealthPermissionError,
 )
 from .const import (
     CONF_HISTORY_DAYS,
@@ -82,6 +84,14 @@ class GoogleHealthConfigFlow(
             health_user_id = await client.async_get_identity()
         except GoogleHealthAuthError:
             return self.async_abort(reason="invalid_auth")
+        except GoogleHealthAccountNotLinkedError:
+            return self.async_abort(reason="account_not_linked")
+        except GoogleHealthPermissionError as err:
+            if err.reason in {"MISSING_OAUTH_SCOPE", "DISALLOWED_OAUTH_SCOPES"}:
+                return self.async_abort(reason="missing_permissions")
+            if err.reason == "API_PRIVATE_PREVIEW_ACCESS_DENIED":
+                return self.async_abort(reason="access_not_available")
+            return self.async_abort(reason="data_access_denied")
         except GoogleHealthError:
             return self.async_abort(reason="cannot_connect")
 
