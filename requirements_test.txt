@@ -1,6 +1,6 @@
 homeassistant==2026.7.0
 pytest>=8.3
-pytest-asyncio>=0.25
+pytest-asyncio>=1.4.0
 pytest-homeassistant-custom-component==0.13.344
 ruff>=0.12
 mypy>=1.15
