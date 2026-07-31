@@ -57,7 +57,6 @@ class GoogleHealthConfigFlow(
             "scope": " ".join(OAUTH_SCOPES),
             "access_type": "offline",
             "prompt": "consent",
-            "include_granted_scopes": "true",
         }
 
     async def async_step_reauth(
@@ -87,8 +86,10 @@ class GoogleHealthConfigFlow(
         except GoogleHealthAccountNotLinkedError:
             return self.async_abort(reason="account_not_linked")
         except GoogleHealthPermissionError as err:
-            if err.reason in {"MISSING_OAUTH_SCOPE", "DISALLOWED_OAUTH_SCOPES"}:
+            if err.reason == "MISSING_OAUTH_SCOPE":
                 return self.async_abort(reason="missing_permissions")
+            if err.reason == "DISALLOWED_OAUTH_SCOPES":
+                return self.async_abort(reason="disallowed_permissions")
             if err.reason == "API_PRIVATE_PREVIEW_ACCESS_DENIED":
                 return self.async_abort(reason="access_not_available")
             return self.async_abort(reason="data_access_denied")
