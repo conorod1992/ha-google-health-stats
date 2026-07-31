@@ -1,0 +1,14 @@
+{
+  "domain": "google_health",
+  "name": "Google Health",
+  "after_dependencies": ["application_credentials"],
+  "codeowners": ["@conorod1992"],
+  "config_flow": true,
+  "dependencies": ["application_credentials", "auth"],
+  "documentation": "https://github.com/conorod1992/ha-google-health-stats",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/conorod1992/ha-google-health-stats/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

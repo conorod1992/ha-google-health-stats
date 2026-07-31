@@ -1,0 +1,74 @@
+{
+  "title": "Google Health",
+  "application_credentials": {
+    "description": "Create OAuth credentials in the [Google Cloud Console]({console_url}) after following the [Google Health setup guide]({setup_url}). Use the redirect URI shown by Home Assistant."
+  },
+  "config": {
+    "flow_title": "Google Health",
+    "step": {
+      "reauth_confirm": {
+        "title": "Reconnect Google Health",
+        "description": "Google Health authorization has expired or was revoked. Sign in again to restore updates."
+      }
+    },
+    "abort": {
+      "already_configured": "This Google Health account is already configured.",
+      "cannot_connect": "Unable to connect to Google Health. Try again later.",
+      "invalid_auth": "Google rejected the authorization.",
+      "wrong_account": "You signed in with a different Google Health account.",
+      "reauth_successful": "Google Health was reconnected successfully."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Google Health options",
+        "description": "Choose how often current data is checked and how much daily history is retained locally.",
+        "data": {
+          "poll_interval": "Polling interval (minutes)",
+          "history_days": "History retention (days)"
+        },
+        "data_description": {
+          "poll_interval": "Default 15; minimum 5 minutes.",
+          "history_days": "Default and maximum 120 days."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "sleep_duration": {
+        "name": "Sleep duration"
+      },
+      "resting_heart_rate": {
+        "name": "Resting heart rate"
+      },
+      "calories_burned": {
+        "name": "Calories burned"
+      },
+      "active_zone_minutes": {
+        "name": "Active Zone Minutes"
+      },
+      "active_zone_minutes_this_week": {
+        "name": "Active Zone Minutes this week"
+      },
+      "average_sleep_this_week": {
+        "name": "Average sleep this week"
+      }
+    }
+  },
+  "services": {
+    "refresh": {
+      "name": "Refresh",
+      "description": "Fetch a normal recent update now."
+    },
+    "backfill": {
+      "name": "Backfill history",
+      "description": "Refresh up to 120 days of daily history."
+    },
+    "get_history": {
+      "name": "Get history",
+      "description": "Return locally cached normalized daily records."
+    }
+  }
+}

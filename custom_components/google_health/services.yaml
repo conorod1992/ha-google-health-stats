@@ -1,0 +1,57 @@
+refresh:
+  name: Refresh
+  description: Fetch the normal recent Google Health update immediately.
+  fields:
+    config_entry_id:
+      name: Config entry
+      description: Required only when more than one Google Health account is configured.
+      required: false
+      selector:
+        config_entry:
+          integration: google_health
+
+backfill:
+  name: Backfill history
+  description: Refresh a selected number of recent daily records, up to 120 days.
+  fields:
+    config_entry_id:
+      name: Config entry
+      description: Required only when more than one Google Health account is configured.
+      required: false
+      selector:
+        config_entry:
+          integration: google_health
+    days:
+      name: Days
+      description: Number of days to refresh, including today.
+      required: true
+      default: 120
+      selector:
+        number:
+          min: 1
+          max: 120
+          mode: box
+
+get_history:
+  name: Get history
+  description: Return normalized locally cached daily records for an inclusive date range.
+  fields:
+    config_entry_id:
+      name: Config entry
+      description: Required only when more than one Google Health account is configured.
+      required: false
+      selector:
+        config_entry:
+          integration: google_health
+    start_date:
+      name: Start date
+      description: First date to return.
+      required: true
+      selector:
+        date:
+    end_date:
+      name: End date
+      description: Last date to return; the range may not exceed 120 days.
+      required: true
+      selector:
+        date:
